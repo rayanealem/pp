@@ -1,0 +1,12 @@
+fastapi>=0.109.0,<0.120.0
+uvicorn[standard]>=0.27.0,<0.35.0
+sqlmodel>=0.0.14,<0.1.0
+psycopg2-binary
+redis
+python-multipart
+python-jose[cryptography]
+passlib[bcrypt]
+bcrypt==4.0.1
+pydantic-settings
+email-validator
+websockets

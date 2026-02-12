@@ -1,0 +1,73 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: cloudpark_db
+    environment:
+      POSTGRES_USER: cloudpark
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: cloudpark
+    ports:
+      - "5432:5432"
+    volumes:
+      - PostgresData:/var/lib/postgresql/data
+    networks:
+      - cloudpark-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: cloudpark_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - RedisData:/data
+    networks:
+      - cloudpark-net
+
+  backend:
+    build: ./backend
+    container_name: cloudpark_backend
+    environment:
+      DATABASE_URL: postgresql://cloudpark:password@db:5432/cloudpark
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: change_me_in_production
+      CORS_ORIGINS: "*"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+      - redis
+    networks:
+      - cloudpark-net
+
+  frontend:
+    build: ./frontend
+    container_name: cloudpark_frontend
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_URL: http://localhost:8000
+    depends_on:
+      - backend
+    networks:
+      - cloudpark-net
+
+  ai-worker:
+    build: ./ai-worker
+    container_name: cloudpark_ai
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      API_URL: http://backend:8000/api/v1
+    depends_on:
+      - redis
+      - backend
+    networks:
+      - cloudpark-net
+
+volumes:
+  PostgresData:
+  RedisData:
+
+
+networks:
+  cloudpark-net:
+    driver: bridge
